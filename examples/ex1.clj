@@ -1,5 +1,8 @@
-(use 'hopp.gramm)
+;; at the repl:
+;; (-main "examples/ex1.clj")
 
+(use 'hopp.gramm)
+(use 'hopp.max)
 
 (def G
   '((S -> ((a S b a a b)(a b a a b)))))
