@@ -12,4 +12,5 @@
     (load-file (first args))
     (do
       (print "Error: I need a file to work, not ")
-      (println args))))
+      (println args)))
+  (shutdown-agents))

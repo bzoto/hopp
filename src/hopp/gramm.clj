@@ -4,7 +4,8 @@
 ;; HOP Grammar tools
 ;; ----------------
 ;; Example test @repl:
-;; (use 'hopp.gramm :reload)(-main "examples/ex1.clj")
+;; (use 'hopp.gramm :reload)
+;; (load-file "examples/ex1.clj")
 
 (ns hopp.gramm)
 (require 'clojure.set)

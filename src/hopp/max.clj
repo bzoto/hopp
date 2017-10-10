@@ -210,7 +210,7 @@
   "takes all the transitions of a symmetrical automaton, and writes them in a pdf diagram (using dotty)"
   [transitions]
   (println "Writing the automaton...")
-  (let [outfile (clojure.java.io/writer "automa.dot")]
+  (with-open [outfile (clojure.java.io/writer "automa.dot")]
     (binding [*out* outfile]
       (println "digraph finite_state_machine {")
       (println "rankdir = LR")
@@ -227,7 +227,6 @@
           (print ", ")(pretty-print t2)
           (print "\" [label = \"")(pretty-print lab)(print "\"")
           (println "] ")))
-      (println "}"))
-    (.close outfile))
+      (println "}")))
   (clojure.java.shell/sh "dot"  "automa.dot" "-Tpdf" "-oautoma.pdf"))
       

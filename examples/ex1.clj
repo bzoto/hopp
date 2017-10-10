@@ -23,3 +23,4 @@
 (def trans (automaton-transitions (automaton-states sys)))
 (write-automaton trans)
 
+
