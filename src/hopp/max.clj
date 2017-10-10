@@ -147,6 +147,7 @@
 ;; Symmetrical Automaton construction
 
 (defn automaton-states
+  "given a Red system computes the set of states of its symmetrical automaton"
   [sys]
   (let [factors (:factors sys)
         k       (:k sys)
@@ -180,6 +181,7 @@
      (vector-droplast state2)))
 
 (defn automaton-transitions
+  "given a set of states of a symmetrical automaton, computes all its transitions."
   [states]
   (into #{}
         (for [x states
@@ -187,7 +189,8 @@
               :when (transition? x y)]
           [x y])))
       
-(defn show-automaton
+(defn write-automaton
+  "takes all the transitions of a symmetrical automaton, and writes them in a pdf diagram (using dotty)"
   [transitions]
   (println "Writing the automaton...")
   (let [outfile (clojure.java.io/writer "automa.dot")]

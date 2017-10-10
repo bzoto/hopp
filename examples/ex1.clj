@@ -21,4 +21,4 @@
 (reduction-star '[a a a b a a b b a a b b a a b b a a b] sys)
 
 (def trans (automaton-transitions (automaton-states sys)))
-(show-automaton trans)
+(write-automaton trans)
