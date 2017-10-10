@@ -143,6 +143,23 @@
         (print "cannot reduce ")
         (println x)))))
 
+(defn ex-to-sys
+  "takes a sequence of tagged examples (vectors) to define a Red system"
+  [examples k]
+  (let [br (border k)
+        fc (apply clojure.set/union
+                  (cons
+                   #{(border (+ k 2))} ;; "axiom" factor
+                   (map #(k-factors (into br (concat [:<] % [:>] br)) k)
+                        examples)))
+
+        sys (->Sys fc k)]
+    (println "Tagged factors:")
+    (doseq [x fc]
+      (pretty-print x)(println))
+    (check-system sys)
+    sys))
+
 
 ;; Symmetrical Automaton construction
 
