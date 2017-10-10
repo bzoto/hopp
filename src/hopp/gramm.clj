@@ -9,6 +9,7 @@
 (ns hopp.gramm)
 (require 'clojure.set)
 (use 'hopp.utils)
+(use 'hopp.max)
 
 (defrecord Nonterm [nonterm])
 (defn Nonterm? [x] (instance? Nonterm x))
@@ -127,8 +128,9 @@
             
           :else (recur (inc i) (concat res (list cur))))))))
 
-(defn compute-tags
-  "computes all the tagged k-words it can find in 'steps' derivations of G"
+(defn tagged-grammar-to-system
+  "computes all the tagged k-words it can find in 'steps' derivations of G;
+  it returns the resulting Red system"
   [G axiom k steps]
   (let [bord (border k)]
     (loop [sfs  (list (into bord (concat (list :< (->Nonterm axiom) :>) bord)))
@@ -141,7 +143,7 @@
             (pretty-print t)
             (println))
           (println "-----------")
-          tags)
+          (->Sys tags k))
         (let [y  (apply-rules (first sfs) G)
               x  (filter (fn [t] (not (terminal-sf? t))) y)
               xs (rest sfs)]

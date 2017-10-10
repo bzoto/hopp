@@ -8,8 +8,8 @@
   '((S -> ((a S b a a b)(a b a a b)))))
 
 
-(def g   (build-tagged-grammar G '(S)))
-(def sys (->Sys (compute-tags g 'S 7 15) 7))
+(def tg  (build-tagged-grammar G '(S)))
+(def sys (tagged-grammar-to-system tg 'S 7 15))
 
 
 (check-system sys)
