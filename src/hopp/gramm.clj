@@ -132,11 +132,11 @@
   [G axiom k steps]
   (let [bord (border k)]
     (loop [sfs  (list (into bord (concat (list :< (->Nonterm axiom) :>) bord)))
-           tags #{ (into [:# :.] bord) }
+           tags #{ (into [:# :.] bord) } ; the starting tagged word
            cnt  0]
       (if (or (empty? sfs)(== steps cnt))
         (do
-          (println "Found tags:")
+          (println "Found tagged k-words:")
           (doseq [t tags]
             (pretty-print t)
             (println))

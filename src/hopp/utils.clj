@@ -47,3 +47,7 @@
   "discards all tags from sf"
   [sf]
   (into [] (filter #(not (contains? #{:< :> :.} %)) sf)))
+
+(defn vector-droplast
+  [vec]
+  (subvec vec 0 (dec (count vec))))

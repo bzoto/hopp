@@ -9,7 +9,7 @@
 (ns hopp.max)
 (require 'clojure.set)
 (use 'hopp.utils)
-
+(use 'clojure.java.shell)
 
 (defrecord Sys [factors k]) ; a "system": i.e. a set of tagged k-words, and k.
 
@@ -35,13 +35,15 @@
               y (:factors sys)
               :when (conflictual? x y)]
           (list x y))]
-    (when-not (empty? conf)
-      (println "Found conflicts: ")
-      (doseq [[x y] conf]
+    (if (empty? conf)
+      (println "No conflicts.")
+      (do
+        (println "Found conflicts: ")
+        (doseq [[x y] conf]
           (pretty-print x)
           (print " vs ")
           (pretty-print y)
-          (println)))
+          (println))))
     conf))
 
 
@@ -140,3 +142,72 @@
       (do
         (print "cannot reduce ")
         (println x)))))
+
+
+;; Symmetrical Automaton construction
+
+(defn automaton-states
+  [sys]
+  (let [factors (:factors sys)
+        k       (:k sys)
+        states (apply clojure.set/union 
+                      (for [x factors
+                            y factors
+                            :let [flag (and (not= :# (first y))
+                                            (not= :# (last x)))
+                                  v    (into x (rest y))
+                                  r1   (if (and flag (is-compatible? v sys))
+                                         (list (into [] (rest v)))
+                                         (list))
+                                  v1   (into [] (concat (vector-droplast x) y))
+                                  r2   (if (and flag (is-compatible? v1 sys))
+                                         (cons (vector-droplast v1) r1)
+                                         r1)
+                                  ]]
+                        (into #{} r2)))
+        start  (into #{} (for [x (filter #(= :# (first %)) states)]
+                            (into [:.] (vector-droplast x))))
+        end    (into #{} (for [x (filter #(= :# (last %)) states)]
+                            (into [] (concat (rest x) [:.]))))
+        ]
+
+    (clojure.set/union states start end)
+    ))
+
+(defn transition?
+  [state1 state2]
+  (= (rest state1)
+     (vector-droplast state2)))
+
+(defn automaton-transitions
+  [states]
+  (into #{}
+        (for [x states
+              y states
+              :when (transition? x y)]
+          [x y])))
+      
+(defn show-automaton
+  [transitions]
+  (println "Writing the automaton...")
+  (let [outfile (clojure.java.io/writer "automa.dot")]
+    (binding [*out* outfile]
+      (println "digraph finite_state_machine {")
+      (println "rankdir = LR")
+      (doseq [[from to] transitions]
+        (let [l   (int (/ (count from) 2))
+              lab (subvec from l (inc l))
+              f1  (subvec from 0 l)
+              f2  (subvec from l (* 2 l))
+              t1  (subvec to 0 l)
+              t2  (subvec to l (* 2 l))]
+          (print "   \"")(pretty-print f1)
+          (print ", ")(pretty-print f2)
+          (print "\" -> \"")(pretty-print t1)
+          (print ", ")(pretty-print t2)
+          (print "\" [label = \"")(pretty-print lab)(print "\"")
+          (println "] ")))
+      (println "}"))
+    (.close outfile))
+  (clojure.java.shell/sh "dot"  "automa.dot" "-Tpdf" "-oautoma.pdf"))
+      
