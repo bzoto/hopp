@@ -137,8 +137,7 @@
               (print "step:  ")
               (pretty-print red)(println)
               (recur red))
-            (do 
-              (println "STOP.")))))
+            (println "STOP."))))
       (do
         (print "cannot reduce ")
         (println x)))))
