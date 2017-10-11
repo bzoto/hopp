@@ -21,12 +21,14 @@
 
 (defn put-tags
   "takes a sentential form and inserts tags"
-  [sf]
+  [sf & no-parenthesis ]
   (loop [i   1
          old (first sf)
          res (list old)]
     (if (= i (count sf))
-      (into [:<] (concat res [:>]))
+      (if (empty? no-parenthesis)
+        (into [:<] (concat res [:>]))
+        (into [:.] res))
       (let [cur (nth sf i)]
         (recur (inc i)
                cur
@@ -37,8 +39,10 @@
 
 (defn build-tagged-grammar
   "takes a grammar as a list of lists (e.g. ((A -> ((a A) (a))) ...); 
-  it returns a hash table of the rules"
-  [gr nt]
+  it returns a hash table of the rules.
+  If excluded-nt is present, it is a list of nonterminals used for simulating EBNF.
+  Rules for expressing the regular sublanguages must be right linear."
+  [gr nt & excluded-nt]
   (loop [r gr
          G {}]
     (if (empty? r)
@@ -49,12 +53,14 @@
          (assoc G
                 (->Nonterm (first rule))
                 (map (fn [t]
-                       (put-tags
-                        (map (fn [u]
-                               (if (some #{u} nt)
-                                 (->Nonterm u)
-                                 u))
-                             t)))
+                       (let [right-part (map (fn [u]
+                                               (if (some #{u} nt)
+                                                 (->Nonterm u)
+                                                 u))
+                                             t)]
+                         (if (some #{(first rule)} (first excluded-nt))
+                           (put-tags right-part true)
+                           (put-tags right-part))))
                      (nth rule 2))))))))
 
 (defn terminal? [x]
@@ -133,23 +139,29 @@
   "computes all the tagged k-words it can find in 'steps' derivations of G;
   it returns the resulting Red system"
   [G axiom k steps]
-  (let [bord (border k)]
-    (loop [sfs  (list (into bord (concat (list :< (->Nonterm axiom) :>) bord)))
-           tags #{ (into [:# :.] bord) } ; the starting tagged word
-           cnt  0]
-      (if (or (empty? sfs)(== steps cnt))
-        (do
-          (println "Found tagged k-words:")
-          (doseq [t tags]
-            (pretty-print t)
-            (println))
-          (println "-----------")
-          (->Sys tags k))
-        (let [y  (apply-rules (first sfs) G)
-              x  (filter (fn [t] (not (terminal-sf? t))) y)
-              xs (rest sfs)]
-          (recur
-           (concat xs x)
-           (reduce clojure.set/union tags (map #(k-factors (fix-tags %) k) y))
-           (inc cnt)))))))
+  (if-not (and (>= k 3)
+               (odd? k))
+    (do
+      (println "Bad k")
+      nil)
+  
+    (let [bord (border k)]
+      (loop [sfs  (list (into bord (concat (list :< (->Nonterm axiom) :>) bord)))
+             tags #{ (into [:# :.] bord) } ; the starting tagged word
+             cnt  0]
+        (if (or (empty? sfs)(== steps cnt))
+          (do
+            (println "Found tagged k-words:")
+            (doseq [t tags]
+              (pretty-print t)
+              (println))
+            (println "-----------")
+            (->Sys tags k))
+          (let [y  (apply-rules (first sfs) G)
+                x  (filter (fn [t] (not (terminal-sf? t))) y)
+                xs (rest sfs)]
+            (recur
+             (concat xs x)
+             (reduce clojure.set/union tags (map #(k-factors (fix-tags %) k) y))
+             (inc cnt))))))))
 
