@@ -24,7 +24,6 @@
                        [c :. b :. a])
                      5))
 
-(check-system sys1)
 
 (def sys2 (ex-to-sys '([a :< a :< a :. b :> b :> b :> a]
                        [a :. b :> a]
@@ -32,4 +31,3 @@
                        [c :. b :. a :> a])
                      7))
 
-(check-system sys2)

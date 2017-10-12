@@ -28,7 +28,7 @@
     (if (= i (count sf))
       (if (empty? no-parenthesis)
         (into [:<] (concat res [:>]))
-        (into [:.] res))
+        res)
       (let [cur (nth sf i)]
         (recur (inc i)
                cur
@@ -49,24 +49,24 @@
       G
       (let [rule (first r)]
         (recur
-         (rest r)
-         (assoc G
-                (->Nonterm (first rule))
-                (map (fn [t]
-                       (let [right-part (map (fn [u]
-                                               (if (some #{u} nt)
-                                                 (->Nonterm u)
-                                                 u))
-                                             t)]
-                         (if (some #{(first rule)} (first excluded-nt))
-                           (put-tags right-part true)
-                           (put-tags right-part))))
-                     (nth rule 2))))))))
+          (rest r)
+          (assoc G
+                 (->Nonterm (first rule))
+                 (map (fn [t]
+                        (let [right-part (map (fn [u]
+                                                (if (some #{u} nt)
+                                                  (->Nonterm u)
+                                                  u))
+                                              t)]
+                          (if (some #{(first rule)} (first excluded-nt))
+                            (put-tags right-part true)
+                            (put-tags right-part))))
+                      (nth rule 2))))))))
 
 (defn terminal? [x]
   (not (or
-        (Nonterm? x)
-        (contains? #{:< :> :.} x))))
+         (Nonterm? x)
+         (contains? #{:< :> :.} x))))
 
 
 (defn terminal-sf?
@@ -101,11 +101,11 @@
       (if (= [:< :. :>]
              (subvec sf i (+ i 3)))
         (into
-         (subvec sf 0 i)
-         (concat [:.]
-                 (subvec sf (+ i 3))))
+          (subvec sf 0 i)
+          (concat [:.]
+                  (subvec sf (+ i 3))))
         (recur (inc i))))))
-  
+
 
 (defn fix-tags
   "takes a completely parenthesized and tagged sentential form; 
@@ -115,24 +115,30 @@
          res '()]
     (if (>= i (- (count sf) 2))
       (fix-axiom-copy-tag
-       (into [] (concat res (subvec sf i))))
+        (into [] (concat res (subvec sf i))))
       (let [cur   (nth sf i)
             next  (nth sf (inc i))
             nnext (nth sf (+ 2 i))]
         (cond
           ;; copy rule
           (and (= cur :<)(Nonterm? next)(= nnext :>)) (recur (+ 2 i) (concat res (list :< :.)))
-          
-          (or
-           (and (= cur :>)(= next :>)) 
-           (and (= cur :<)(= next :<))
-           (and (Nonterm? cur)(= next :>))) (recur (inc i) res)
 
-          (and (= cur :<)(Nonterm? next)) (recur (+ 2 i) (concat res (list :<)))
-          
+          (and (terminal? cur)(terminal? next)) (recur (inc i) (concat res (list cur :.)))
+
+          (or
+            (and (= cur :.)(= next :.))
+            (and (= cur :.)(= next :>))
+            (and (= cur :>)(= next :>)) 
+            (and (= cur :<)(= next :<))
+            (and (Nonterm? cur)(= next :>))) (recur (inc i) res)
+
+          (and (= cur :<)(or
+                           (= next :.) 
+                           (Nonterm? next))) (recur (+ 2 i) (concat res (list :<)))
+
           (and (terminal? cur)(Nonterm? next)(terminal? nnext)) (recur (+ 2 i)
                                                                        (concat res (list cur :.)))
-            
+
           :else (recur (inc i) (concat res (list cur))))))))
 
 (defn tagged-grammar-to-system
@@ -144,7 +150,7 @@
     (do
       (println "Bad k")
       nil)
-  
+
     (let [bord (border k)]
       (loop [sfs  (list (into bord (concat (list :< (->Nonterm axiom) :>) bord)))
              tags #{ (into [:# :.] bord) } ; the starting tagged word
@@ -161,7 +167,7 @@
                 x  (filter (fn [t] (not (terminal-sf? t))) y)
                 xs (rest sfs)]
             (recur
-             (concat xs x)
-             (reduce clojure.set/union tags (map #(k-factors (fix-tags %) k) y))
-             (inc cnt))))))))
+              (concat xs x)
+              (reduce clojure.set/union tags (map #(k-factors (fix-tags %) k) y))
+              (inc cnt))))))))
 
