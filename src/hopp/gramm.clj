@@ -20,7 +20,8 @@
 
 
 (defn put-tags
-  "takes a sentential form and inserts tags"
+  "takes a sentential form and inserts tags. 
+  Use a second parameter if you don't want parenthesis (the external :< :> pair)"
   [sf & no-parenthesis ]
   (loop [i   1
          old (first sf)
@@ -40,8 +41,7 @@
 (defn build-tagged-grammar
   "takes a grammar as a list of lists (e.g. ((A -> ((a A) (a))) ...); 
   it returns a hash table of the rules.
-  If excluded-nt is present, it is a list of nonterminals used for simulating EBNF.
-  Rules for expressing the regular sublanguages must be right linear."
+  If excluded-nt is present, it is a list of nonterminals used for simulating EBNF."
   [gr nt & excluded-nt]
   (loop [r gr
          G {}]
@@ -126,15 +126,11 @@
           (and (terminal? cur)(terminal? next)) (recur (inc i) (concat res (list cur :.)))
 
           (or
-            (and (= cur :.)(= next :.))
-            (and (= cur :.)(= next :>))
             (and (= cur :>)(= next :>)) 
             (and (= cur :<)(= next :<))
             (and (Nonterm? cur)(= next :>))) (recur (inc i) res)
 
-          (and (= cur :<)(or
-                           (= next :.) 
-                           (Nonterm? next))) (recur (+ 2 i) (concat res (list :<)))
+          (and (= cur :<)(Nonterm? next)) (recur (+ 2 i) (concat res (list :<)))
 
           (and (terminal? cur)(Nonterm? next)(terminal? nnext)) (recur (+ 2 i)
                                                                        (concat res (list cur :.)))
