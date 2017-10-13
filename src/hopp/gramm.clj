@@ -21,7 +21,7 @@
 
 (defn put-tags
   "takes a sentential form and inserts tags. 
-  Use a second parameter if you don't want parenthesis (the external :< :> pair)"
+  Use the second parameter if you don't want parenthesis (the external :< :> pair)"
   [sf & no-parenthesis ]
   (loop [i   1
          old (first sf)

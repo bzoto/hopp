@@ -19,7 +19,7 @@
 (reduction-star '[a a a c b b b b c b c b b b b b] sys)
 
 (def trans (automaton-transitions (automaton-states sys)))
-;(write-automaton trans)
+(write-automaton trans)
 
 (def G1
   '(
