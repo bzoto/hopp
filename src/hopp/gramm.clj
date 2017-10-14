@@ -19,25 +19,6 @@
   (filter #(not (Nonterm? %)) lst))
 
 
-(defn put-tags
-  "takes a sentential form and inserts tags. 
-  Use the second parameter if you don't want parenthesis (the external :< :> pair)"
-  [sf & no-parenthesis ]
-  (loop [i   1
-         old (first sf)
-         res (list old)]
-    (if (= i (count sf))
-      (if (empty? no-parenthesis)
-        (into [:<] (concat res [:>]))
-        res)
-      (let [cur (nth sf i)]
-        (recur (inc i)
-               cur
-               (concat res (if-not (or (Nonterm? cur)
-                                       (Nonterm? old))
-                             (list :. cur)
-                             (list cur))))))))
-
 (defn build-tagged-grammar
   "takes a grammar as a list of lists (e.g. ((A -> ((a A) (a))) ...); 
   it returns a hash table of the rules.
@@ -59,8 +40,8 @@
                                                   u))
                                               t)]
                           (if (some #{(first rule)} (first excluded-nt))
-                            (put-tags right-part true)
-                            (put-tags right-part))))
+                            (into [] right-part)
+                            (into [:<] (concat right-part [:>])))))
                       (nth rule 2))))))))
 
 (defn terminal? [x]
@@ -92,50 +73,37 @@
                (concat left (list x))
                xs)))))
 
-
-(defn fix-axiom-copy-tag ; the horror, the horror!
-  [sf]
-  (loop [i 0]
-    (if (>= i (- (count sf) 2))
-      sf
-      (if (= [:< :. :>]
-             (subvec sf i (+ i 3)))
-        (into
-          (subvec sf 0 i)
-          (concat [:.]
-                  (subvec sf (+ i 3))))
-        (recur (inc i))))))
-
-
 (defn fix-tags
   "takes a completely parenthesized and tagged sentential form; 
-  it drops non-terminals and redundant parentheses"
+  it drops non-terminals and redundant parentheses;
+  it also adds the missing :."
   [sf]
   (loop [i 0
-         res '()]
+         res '()
+         drop> false]
     (if (>= i (- (count sf) 2))
-      (fix-axiom-copy-tag
-        (into [] (concat res (subvec sf i))))
+        (into [] (concat res (subvec sf i)))
       (let [cur   (nth sf i)
             next  (nth sf (inc i))
             nnext (nth sf (+ 2 i))]
         (cond
+          (and drop> (= cur :>)) (recur (inc i) res drop>)
           ;; copy rule
-          (and (= cur :<)(Nonterm? next)(= nnext :>)) (recur (+ 2 i) (concat res (list :< :.)))
+          (and (= cur :<)(Nonterm? next)(= nnext :>)) (recur (+ 2 i) (concat res (list :.)) true)
 
-          (and (terminal? cur)(terminal? next)) (recur (inc i) (concat res (list cur :.)))
+          (and (terminal? cur)(terminal? next)) (recur (inc i) (concat res (list cur :.)) drop>)
 
           (or
             (and (= cur :>)(= next :>)) 
             (and (= cur :<)(= next :<))
-            (and (Nonterm? cur)(= next :>))) (recur (inc i) res)
+            (and (Nonterm? cur)(= next :>))) (recur (inc i) res drop>)
 
-          (and (= cur :<)(Nonterm? next)) (recur (+ 2 i) (concat res (list :<)))
+          (and (= cur :<)(Nonterm? next)) (recur (+ 2 i) (concat res (list :<)) drop>)
 
           (and (terminal? cur)(Nonterm? next)(terminal? nnext)) (recur (+ 2 i)
-                                                                       (concat res (list cur :.)))
+                                                                       (concat res (list cur :.)) drop>)
 
-          :else (recur (inc i) (concat res (list cur))))))))
+          :else (recur (inc i) (concat res (list cur)) drop>))))))
 
 (defn tagged-grammar-to-system
   "computes all the tagged k-words it can find in 'steps' derivations of G;
@@ -144,7 +112,7 @@
   (if-not (and (>= k 3)
                (odd? k))
     (do
-      (println "Bad k")
+      (print "Bad k: ")(println k)
       nil)
 
     (let [bord (border k)]

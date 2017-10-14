@@ -11,6 +11,7 @@
            (.exists (as-file (first args))))
     (load-file (first args))
     (do
-      (print "Error: I need a file to work, not ")
-      (println args)))
+      (print "Error: I need a file to work, and ")
+      (print args) 
+      (println " is not a valid filename")))
   (shutdown-agents))
