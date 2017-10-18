@@ -35,3 +35,14 @@
 
 
 (reduction-star '[b b b b a b b a b a c c c a] sys1)
+
+
+
+(def G2
+  '(
+    (S -> ((a S b a b)(a b a b)))
+    ))
+
+(def tg2  (build-tagged-grammar G2 '(S X Y)))
+(def sys2 (tagged-grammar-to-system tg2 'S 3 65))
+(check-system sys2)

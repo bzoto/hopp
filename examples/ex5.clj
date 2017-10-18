@@ -18,3 +18,5 @@
 (reduction-star '[a a b a a b b a a b] sys)
 (reduction-star '[0 a a 0 a a c] sys)
 
+(def trans (automaton-transitions (automaton-states sys)))
+(write-automaton trans)

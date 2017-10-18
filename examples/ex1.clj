@@ -9,7 +9,7 @@
 
 
 (def tg  (build-tagged-grammar G '(S)))
-(def sys (tagged-grammar-to-system tg 'S 7 15))
+(def sys (tagged-grammar-to-system tg 'S 7 25))
 
 
 (check-system sys)
