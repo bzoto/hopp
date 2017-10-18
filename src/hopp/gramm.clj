@@ -86,14 +86,18 @@
         out
         (let [nxt (first xs)]
           (cond
-            (and drop> (= cur :>))      (recur nxt (rest xs) out drop>)
-            (and (= cur :<)(= nxt :<))  (recur nxt (rest xs) out drop>)
-            (and (= cur :>)(= nxt :>))  (recur nxt (rest xs) out drop>)
-            ; copy rules
-            (and (= cur :<)(= nxt :>))  (recur (first xs) (rest (rest xs)) (conj out :.) true)
+            (or
+             (and drop> (= cur :>)) ; this is for copy rules  
+             (and (= cur :<)(= nxt :<)) 
+             (and (= cur :>)(= nxt :>))) (recur nxt (rest xs) out drop>)
+            
+            ;; copy rules
+            (and (= cur :<)(= nxt :>)) (recur (first xs) (rest (rest xs)) (conj out :.) true)
+            
             (or (and (= :# cur)(= :# nxt))
-                (and (terminal? cur)(terminal? nxt)))  (recur nxt (rest xs) (conj (conj out cur) :.) drop>)
-            :else  (recur nxt (rest xs) (conj out cur) drop>)))))))
+                (and (terminal? cur)(terminal? nxt))) (recur nxt (rest xs) (-> out (conj cur)(conj :.)) drop>)
+            
+            :else (recur nxt (rest xs) (conj out cur) drop>)))))))
 
 (defn tagged-grammar-to-system
   "computes all the tagged k-words it can find in 'steps' derivations of G;
