@@ -83,19 +83,24 @@
            drop> false
            ]
       (if (empty? xs)
-        out
+        (conj out cur)
         (let [nxt (first xs)]
           (cond
+            (and drop> (= cur :>)(not= nxt :>)) (recur nxt (rest xs)
+                                                       (if (and (= :# (last out))
+                                                                (= :# nxt))
+                                                         (conj out :.)
+                                                         (conj out :>))
+                                                       false)
+            
             (or
              (and drop> (= cur :>)) ; this is for copy rules  
              (and (= cur :<)(= nxt :<)) 
              (and (= cur :>)(= nxt :>))) (recur nxt (rest xs) out drop>)
             
             ;; copy rules
-            (and (= cur :<)(= nxt :>)) (recur (first xs) (rest (rest xs)) (conj out :.) true)
+            (and (= cur :<)(= nxt :>)) (recur nxt (rest xs) out true)
 
-            (and (terminal? cur)(= :# nxt)) (recur nxt (rest xs) (-> out (conj cur)(conj :>)) drop>)
-            
             (or (and (= :# cur)(= :# nxt))
                 (and (terminal? cur)(terminal? nxt))) (recur nxt (rest xs) (-> out (conj cur)(conj :.)) drop>)
             
