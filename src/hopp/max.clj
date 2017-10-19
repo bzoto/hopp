@@ -46,6 +46,9 @@
           (println))))
     conf))
 
+(defn nonconflictual-sys?
+  [x]
+  (empty? (check-system x)))
 
 (defn factor-precs
   "get precedences for a subword. If nil: it is not an allowed factor"
@@ -109,7 +112,7 @@
         k           (:k sys)
         hand        (find-handle sf)]
     (if (nil? hand)
-      nil 
+      :end
       (let [[start end] hand]
         (if-some [hole (nth (insert-precs (into [(nth sf (dec start))]
                                                 (sigma (subvec sf end (+ end (- k 2)))))
@@ -118,7 +121,7 @@
           (into (subvec sf 0 start)
                 (concat [hole]
                         (subvec sf end)))
-          nil)))))
+          :no-precs)))))
 
 (defn reduction-star
   "apply all the possible reductions of sys to an input x"
@@ -132,15 +135,23 @@
         (print "START: ")
         (pretty-print input)(println)
         (loop [cur input]
-          (if-some [red (reduction cur sys)]
-            (do
-              (print "step:  ")
-              (pretty-print red)(println)
-              (recur red))
-            (println "STOP."))))
+          (let [red (reduction cur sys)]
+            (cond
+              (= :no-precs red) (do
+                                  (println "ERROR.")
+                                  false)
+              (= :end red) (do
+                             (println "STOP.")
+                             true)
+              :else (do
+                      (print "step:  ")
+                      (pretty-print red)(println)
+                      (recur red))
+              ))))
       (do
         (print "cannot reduce ")
-        (println x)))))
+        (println x)
+        false))))
 
 (defn ex-to-sys
   "takes a sequence of tagged examples (vectors) to define a Red system"

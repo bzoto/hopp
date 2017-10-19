@@ -93,6 +93,8 @@
             
             ;; copy rules
             (and (= cur :<)(= nxt :>)) (recur (first xs) (rest (rest xs)) (conj out :.) true)
+
+            (and (terminal? cur)(= :# nxt)) (recur nxt (rest xs) (-> out (conj cur)(conj :>)) drop>)
             
             (or (and (= :# cur)(= :# nxt))
                 (and (terminal? cur)(terminal? nxt))) (recur nxt (rest xs) (-> out (conj cur)(conj :.)) drop>)
@@ -128,4 +130,3 @@
               (concat xs x)
               (reduce clojure.set/union tags (map #(k-factors (fix-tags %) k) y))
               (inc cnt))))))))
-
