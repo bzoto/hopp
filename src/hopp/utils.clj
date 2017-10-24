@@ -51,3 +51,19 @@
 (defn vector-droplast
   [vec]
   (subvec vec 0 (dec (count vec))))
+
+
+(defn iterated-p-car
+  [list-of-lists]
+  (reduce (fn [X Y]
+            (for [x X
+                  y Y]
+              (cond
+                (and (list? x)(seq? y)) (concat y x)
+                (seq? y) (concat y (list x))
+                (seq? x) (concat (list y) x)
+                :else (concat (list y)(list x)))))
+          list-of-lists))
+
+
+
