@@ -90,7 +90,7 @@
               (last tagged-factors))))))
         
 
-(defn find-handle
+(defn- find-handle
   [sf]
   (loop [i 0
          start nil]
@@ -202,7 +202,7 @@
     (clojure.set/union states start end)
     ))
 
-(defn transition?
+(defn- transition?
   [state1 state2]
   (= (rest state1)
      (vector-droplast state2)))
